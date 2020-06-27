@@ -1,0 +1,109 @@
+buildscript {
+    repositories {
+        google()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
+        jcenter()
+    }
+    dependencies {
+        if (rootProject.ext.has("gradle_classpath")) {
+            classpath rootProject.ext.gradle_classpath
+        } else {
+            logger.warn('classpath not found in rootProject')
+            classpath 'com.android.tools.build:gradle:3.0.1'
+        }
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+
+    if (rootProject.ext.has("compileSdkVersion")) {
+        compileSdkVersion rootProject.ext.compileSdkVersion
+        buildToolsVersion rootProject.ext.buildToolsVersion
+    } else {
+        logger.warn('compileSdkVersion not found in rootProject')
+        compileSdkVersion = 27
+        buildToolsVersion = "27.0.3"
+    }
+
+    defaultConfig {
+        applicationId "de.j4velin.pedometer"
+        minSdkVersion 19
+    }
+
+    signingConfigs {
+        release
+    }
+
+    flavorDimensions "main"
+
+    productFlavors {
+        play {
+            dimension "main"
+        }
+        fdroid {
+            dimension "main"
+        }
+    }
+
+    lintOptions{
+        disable 'MissingTranslation'
+        disable 'ExtraTranslation'
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            zipAlignEnabled true
+            minifyEnabled true
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+        debug {
+            debuggable true
+            signingConfig signingConfigs.release
+            zipAlignEnabled true
+            minifyEnabled false
+        }
+    }
+}
+
+repositories {
+    google()
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
+    }
+    jcenter()
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.github.j4velin.colorpicker:colorpicker:1.20.6'
+    implementation 'com.github.j4velin.EazeGraph:EazeGraph:1.0.3'
+    implementation 'com.google.android.apps.dashclock:dashclock-api:2.0.0'
+    playImplementation 'com.google.android.gms:play-services-fitness:15.0.1'
+    playImplementation 'com.google.android.gms:play-services-games:15.0.1'
+    playImplementation 'com.google.android.gms:play-services-identity:15.0.1'
+}
+
+def props = new Properties()
+
+if (project.file("key.properties").exists()) {
+    props.load(new FileInputStream(project.file("key.properties")))
+} else {
+    logger.warn('Using sample keystore!!')
+    props.load(new FileInputStream(project.file("key.properties.sample")))
+}
+
+android.signingConfigs.release.storeFile rootProject.file(props.keyStore)
+
+android.signingConfigs.release.storePassword props.keyStorePassword
+
+android.signingConfigs.release.keyAlias props.keyAlias
+
+android.signingConfigs.release.keyPassword props.keyAliasPassword
